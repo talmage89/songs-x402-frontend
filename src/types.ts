@@ -22,3 +22,7 @@ export type Song = z.infer<typeof songSchema>;
 export type Comment = z.infer<typeof commentSchema>;
 export type SongWithComments = Song & { comments: Comment[] };
 export type CommentBody = z.infer<typeof commentBodySchema>;
+
+export type WebSocketMessage =
+  | { type: "update"; songId: number; data: SongWithComments }
+  | { type: "error"; message: string };

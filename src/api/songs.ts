@@ -30,35 +30,33 @@ export const songsApi = {
   },
 
   /**
-   * Upvote a song (returns song with comments)
+   * Upvote a song (updates are received via WebSocket)
    */
-  async upvote(id: number): Promise<SongWithComments> {
+  async upvote(id: number): Promise<void> {
     const response = await fetch(getApiUrl(`/d/${id}/up`), {
       method: "POST",
     });
     if (!response.ok) {
       throw new Error(`Failed to upvote: ${response.statusText}`);
     }
-    return response.json();
   },
 
   /**
-   * Downvote a song (returns song with comments)
+   * Downvote a song (updates are received via WebSocket)
    */
-  async downvote(id: number): Promise<SongWithComments> {
+  async downvote(id: number): Promise<void> {
     const response = await fetch(getApiUrl(`/d/${id}/down`), {
       method: "POST",
     });
     if (!response.ok) {
       throw new Error(`Failed to downvote: ${response.statusText}`);
     }
-    return response.json();
   },
 
   /**
-   * Add a comment to a song
+   * Add a comment to a song (updates are received via WebSocket)
    */
-  async comment(id: number, text: string): Promise<SongWithComments> {
+  async comment(id: number, text: string): Promise<void> {
     const response = await fetch(getApiUrl(`/d/${id}/comment`), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -67,6 +65,5 @@ export const songsApi = {
     if (!response.ok) {
       throw new Error(`Failed to add comment: ${response.statusText}`);
     }
-    return response.json();
   },
 };

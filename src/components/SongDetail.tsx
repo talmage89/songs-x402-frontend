@@ -2,6 +2,7 @@ import { ArrowDown, ArrowUp } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { songsApi } from "../api/songs";
+import { useSongWebSocket } from "../hooks/useSongWebSocket";
 import type { SongWithComments } from "../types";
 import { commentBodySchema } from "../types";
 
@@ -21,9 +22,11 @@ export const SongDetail = () => {
   const commentInputRef = useRef<HTMLTextAreaElement>(null);
   const shouldFocusAfterSubmit = useRef(false);
 
+  const songId = id ? Number.parseInt(id, 10) : undefined;
+
   useEffect(() => {
     const fetchSong = async () => {
-      if (!id) {
+      if (!songId) {
         navigate("/");
         return;
       }
@@ -32,7 +35,7 @@ export const SongDetail = () => {
       setError(null);
 
       try {
-        const foundSong = await songsApi.getById(Number.parseInt(id, 10));
+        const foundSong = await songsApi.getById(songId);
         setSong(foundSong);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to load song");
@@ -42,7 +45,13 @@ export const SongDetail = () => {
     };
 
     fetchSong();
-  }, [id, navigate]);
+  }, [songId, navigate]);
+
+  useSongWebSocket(
+    songId,
+    (updatedSong) => setSong(updatedSong),
+    (errorMessage) => song && console.error("WebSocket error:", errorMessage),
+  );
 
   useEffect(() => {
     if (
@@ -62,7 +71,7 @@ export const SongDetail = () => {
 
     setVoting(true);
     try {
-      setSong(await songsApi.upvote(song.id));
+      await songsApi.upvote(song.id);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to upvote");
     } finally {
@@ -75,7 +84,7 @@ export const SongDetail = () => {
 
     setVoting(true);
     try {
-      setSong(await songsApi.downvote(song.id));
+      await songsApi.downvote(song.id);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to downvote");
     } finally {
@@ -103,8 +112,7 @@ export const SongDetail = () => {
     setSubmittingComment(true);
     setError(null);
     try {
-      const updatedSong = await songsApi.comment(song.id, commentText.trim());
-      setSong(updatedSong);
+      await songsApi.comment(song.id, commentText.trim());
       setCommentText("");
       shouldFocusAfterSubmit.current = true;
     } catch (err) {
